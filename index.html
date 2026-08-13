@@ -58,6 +58,11 @@
   .empty-state{
     max-width: 420px; margin: 40px auto; text-align:center; padding: 0 20px;
   }
+  .orphan-warning{
+    max-width:480px; margin: 10px auto 0; padding: 10px 14px; background:#FBEFE0;
+    border:1px solid #E3CBA0; border-radius:10px; font-size:12.5px; color:#7A5A2E;
+    cursor:pointer; line-height:1.4;
+  }
   .empty-state p{ color: var(--ink-soft); font-size: 14px; line-height:1.5; }
   .empty-state button{
     margin-top:14px; background: var(--accent); color:white; border:none;
@@ -68,10 +73,16 @@
   .cycle-header{
     padding: 0 16px 8px; font-family: Georgia, serif; font-size:14.5px;
     font-weight:600; color: var(--accent); display:flex; align-items:center; gap:8px;
+    justify-content:space-between;
   }
   .cycle-header .n{
     background: var(--accent); color:white; width:20px; height:20px; border-radius:50%;
     display:inline-flex; align-items:center; justify-content:center; font-size:11px; font-family:inherit;
+  }
+  .cycle-header-label{ display:flex; align-items:center; gap:8px; }
+  .cycle-export-btn{
+    background: none; border: 1px solid var(--line); border-radius: 8px; padding: 5px 10px;
+    font-size: 11.5px; color: var(--accent); cursor:pointer; white-space:nowrap; font-family: inherit;
   }
   .cycle-strip{
     display:flex; overflow-x:auto; gap:4px; padding: 0 12px 10px;
@@ -411,6 +422,22 @@ function renderDayCol(dateStr, dayNum){
   return col;
 }
 
+function findOrphanDays(starts){
+  const orphans = [];
+  Object.keys(data).forEach(k=>{
+    const entry = data[k];
+    if (!entry) return;
+    const hasContent = entry.color || entry.code || (entry.note && entry.note.trim()) || entry.inicioCiclo;
+    if (!hasContent) return;
+    const covered = starts.some((s, idx)=>{
+      const range = getCycleRange(s, starts, idx);
+      return k >= range.start && k <= range.end;
+    });
+    if (!covered) orphans.push(k);
+  });
+  return orphans.sort();
+}
+
 function renderAll(){
   const container = document.getElementById('cyclesContainer');
   const starts = computeCycleStarts();
@@ -425,6 +452,16 @@ function renderAll(){
   }
 
   container.innerHTML = '';
+
+  const orphans = findOrphanDays(starts);
+  if (orphans.length > 0){
+    const warn = document.createElement('div');
+    warn.className = 'orphan-warning';
+    warn.innerHTML = 'Hay ' + orphans.length + ' día(s) guardado(s) que no aparecen en ningún ciclo (quedaron antes del primer inicio de ciclo registrado). Tocá para revisar el primero: <b>' + orphans[0] + '</b>';
+    warn.addEventListener('click', ()=> openSheet(orphans[0]));
+    container.appendChild(warn);
+  }
+
   starts.forEach((start, idx)=>{
     const range = getCycleRange(start, starts, idx);
     const block = document.createElement('div');
@@ -432,7 +469,15 @@ function renderAll(){
     const header = document.createElement('div');
     header.className = 'cycle-header';
     const startLabel = dateObj(start).toLocaleDateString('es-AR', {day:'2-digit', month:'2-digit', year:'numeric'});
-    header.innerHTML = `<span class="n">${idx+1}</span> Ciclo ${idx+1} · ${startLabel}`;
+    header.innerHTML = `<span class="cycle-header-label"><span class="n">${idx+1}</span> Ciclo ${idx+1} · ${startLabel}</span>`;
+    const exportBtn = document.createElement('button');
+    exportBtn.className = 'cycle-export-btn';
+    exportBtn.textContent = '📷 Exportar';
+    exportBtn.addEventListener('click', (e)=>{
+      e.stopPropagation();
+      exportImage(idx);
+    });
+    header.appendChild(exportBtn);
     block.appendChild(header);
 
     const strip = document.createElement('div');
@@ -663,24 +708,29 @@ function drawDayCell(ctx, x, y, dateStr, dayNum, entry, pk, cellW){
   ctx.fillText(d.getDate()+' '+MESES_SHORT[d.getMonth()], x+cellW/2, yy+23);
 }
 
-function buildChartCanvas(){
+function buildChartCanvas(onlyCycleIdx){
   const starts = computeCycleStarts();
   const cellW = 66;
   const rowH = 18+58+20+14+30; // = 140
   const headerH = 26;
   const gapBetween = 14;
   const padding = 24;
-  const legendH = 130;
+  const legendH = 145;
 
-  let maxDays = 1;
-  const cycles = starts.map((start, idx)=>{
+  const allCycles = starts.map((start, idx)=>{
     const range = getCycleRange(start, starts, idx);
     const days = Math.round((dateObj(range.end)-dateObj(range.start))/86400000)+1;
-    if (days > maxDays) maxDays = days;
     return {start, idx, range, days};
   });
 
-  const width = padding*2 + Math.max(maxDays,6)*cellW;
+  const cycles = (onlyCycleIdx !== undefined && onlyCycleIdx !== null)
+    ? allCycles.filter(c => c.idx === onlyCycleIdx)
+    : allCycles;
+
+  let maxDays = 6;
+  cycles.forEach(c => { if (c.days > maxDays) maxDays = c.days; });
+
+  const width = padding*2 + maxDays*cellW;
   const titleH = 60;
   const height = titleH + cycles.reduce((sum)=> sum + headerH + rowH + gapBetween, 0) + legendH + padding;
 
@@ -693,7 +743,10 @@ function buildChartCanvas(){
 
   ctx.fillStyle = INK; ctx.textAlign='left'; ctx.textBaseline='alphabetic';
   ctx.font = 'bold 20px Georgia, serif';
-  ctx.fillText('Mi Registro · Método Creighton', padding, 30);
+  const titleText = cycles.length === 1
+    ? 'Mi Registro · Ciclo ' + (cycles[0].idx+1)
+    : 'Mi Registro · Método Creighton';
+  ctx.fillText(titleText, padding, 30);
   ctx.fillStyle = INKSOFT; ctx.font='12px sans-serif';
   const genDate = new Date().toLocaleDateString('es-AR', {day:'2-digit', month:'2-digit', year:'numeric'});
   ctx.fillText('Generado el ' + genDate, padding, 48);
@@ -727,8 +780,10 @@ function buildChartCanvas(){
   ctx.fillStyle = INK; ctx.font='bold 12px sans-serif';
   ctx.fillText('Referencia', padding, y+18);
   const legendItems = [
-    ['rojo','Sangrado (incluye marrón/negro — anotar "B" en el código)'], ['verde','Día seco / no-pico'],
-    ['amarillo','Secreción no-pico'], ['blanco','Secreción tipo pico']
+    ['rojo','Sangrado (incluye marrón/negro — anotar "B" en el código)'],
+    ['verde','Moco tipo no-pico / seco'],
+    ['amarillo','Moco tipo pico en fase post-pico (después del Día Pico)'],
+    ['blanco','Moco tipo pico, antes o en el Día Pico']
   ];
   let ly = y + 36;
   legendItems.forEach(([id,label])=>{
@@ -755,18 +810,23 @@ function waitForBabyImg(){
   });
 }
 
+async function exportImage(cycleIdx){
+  await waitForBabyImg();
+  const canvas = buildChartCanvas(cycleIdx);
+  const url = canvas.toDataURL('image/png');
+  const a = document.createElement('a');
+  const stamp = new Date().toISOString().slice(0,10);
+  const suffix = (cycleIdx !== undefined && cycleIdx !== null) ? ('-ciclo' + (cycleIdx+1)) : '-completo';
+  a.href = url; a.download = 'registro-creighton' + suffix + '-' + stamp + '.png';
+  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+}
+
 document.getElementById('exportImgBtn').addEventListener('click', async ()=>{
   if (computeCycleStarts().length === 0){
     alert('Todavía no hay ningún ciclo registrado para exportar.');
     return;
   }
-  await waitForBabyImg();
-  const canvas = buildChartCanvas();
-  const url = canvas.toDataURL('image/png');
-  const a = document.createElement('a');
-  const stamp = new Date().toISOString().slice(0,10);
-  a.href = url; a.download = 'registro-creighton-' + stamp + '.png';
-  document.body.appendChild(a); a.click(); document.body.removeChild(a);
+  await exportImage(null);
 });
 
 document.getElementById('exportBtn').addEventListener('click', ()=>{
