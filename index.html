@@ -54,6 +54,27 @@
     margin: 0 0 2px;
   }
   header .sub{ font-size: 12px; color: var(--ink-soft); }
+  .logout-btn{
+    position:absolute; top: 18px; right: 16px; background:none; border:1px solid var(--line);
+    border-radius: 8px; padding: 5px 10px; font-size: 11.5px; color: var(--ink-soft); cursor:pointer;
+  }
+
+  .auth-screen{
+    max-width: 380px; margin: 40px auto; padding: 0 20px; display:flex; flex-direction:column; gap:10px;
+  }
+  .auth-intro{ font-size: 13.5px; color: var(--ink-soft); text-align:center; margin-bottom: 6px; line-height:1.5; }
+  .auth-screen input{
+    border:1px solid var(--line); border-radius:10px; padding:12px; font-size:15px;
+    font-family: inherit; background:#fff;
+  }
+  .auth-actions{ display:flex; gap:10px; margin-top:4px; }
+  .auth-actions button{
+    flex:1; padding:12px; border-radius:10px; border:1px solid var(--line); font-size:14px;
+    cursor:pointer; background: var(--paper-2); color: var(--ink); font-family: inherit;
+  }
+  .auth-actions button.primary{ background: var(--accent); color:white; border-color: var(--accent); font-weight:600; }
+  .auth-error{ color: #A5081E; font-size: 12.5px; text-align:center; min-height: 16px; margin: 2px 0 0; }
+  .auth-loading{ color: var(--ink-soft); font-size: 12.5px; text-align:center; margin: 2px 0 0; }
 
   .empty-state{
     max-width: 420px; margin: 40px auto; text-align:center; padding: 0 20px;
@@ -108,6 +129,16 @@
     position:absolute; bottom:2px; right:4px; color: var(--mark); font-weight:800;
     font-size: 13px; text-shadow: 0 0 2px white, 0 0 2px white;
   }
+  .intercourse-mark{
+    position:absolute; top:3px; left:3px; width:14px; height:14px; border-radius:50%;
+    background: var(--ink); color:#fff; font-size:9px; font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+  }
+  .spotting-mark{
+    position:absolute; top:3px; right:3px; width:14px; height:14px; border-radius:50%;
+    background: var(--marron); color:#fff; font-size:9px; font-weight:700;
+    display:flex; align-items:center; justify-content:center;
+  }
   .code-cell{
     text-align:center; font-size:10.5px; padding: 5px 2px; min-height: 16px;
     color: var(--ink); border-bottom:1px solid var(--line); word-break: break-all;
@@ -131,14 +162,19 @@
   .legend-note{ font-size: 11.5px; color: var(--ink-soft); margin-top: 12px; line-height:1.5; border-top: 1px solid var(--line); padding-top: 12px; }
 
   .actions{ max-width:480px; margin: 20px auto 0; padding: 0 18px; display:flex; gap: 10px; flex-wrap:wrap; }
-  .actions button{ flex:1 1 30%; padding: 11px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--paper-2); color: var(--ink); font-size: 13px; cursor:pointer; }
+  .actions button{ flex:1 1 44%; padding: 11px 10px; border-radius: 10px; border: 1px solid var(--line); background: var(--paper-2); color: var(--ink); font-size: 12.5px; cursor:pointer; }
   .actions button.primary{ background: var(--accent); color:white; border-color: var(--accent); font-weight:600; }
 
   .overlay{ position:fixed; inset:0; background: rgba(51,48,42,0.45); display:none; align-items:flex-end; justify-content:center; z-index:20; }
   .overlay.open{ display:flex; }
   .sheet{ background: var(--paper); width:100%; max-width: 480px; border-radius: 20px 20px 0 0; padding: 18px 20px 26px; max-height: 88vh; overflow-y:auto; }
   .sheet-handle{ width:36px; height:4px; background: var(--line); border-radius:4px; margin: 0 auto 14px; }
-  .sheet h3{ font-family: Georgia, serif; font-size:18px; margin: 0 0 2px; text-transform:capitalize; }
+  .sheet h3{ font-family: Georgia, serif; font-size:16px; margin: 0; text-transform:capitalize; text-align:center; flex:1; }
+  .sheet-daynav{ display:flex; align-items:center; gap:8px; margin-bottom: 6px; }
+  .sheet-daynav button{
+    background: var(--paper-2); border: 1px solid var(--line); border-radius: 8px;
+    width: 32px; height: 32px; font-size: 16px; color: var(--accent); cursor:pointer; flex-shrink:0;
+  }
   .sheet .cycle-info{ font-size:12.5px; color: var(--ink-soft); margin-bottom: 6px; }
   .auto-note{ font-size:12px; background:var(--sage); color:var(--ink); padding:8px 10px; border-radius:8px; margin-bottom:10px; }
 
@@ -190,7 +226,22 @@
 <header>
   <h1>Mi Registro</h1>
   <div class="sub">Método Creighton · Modelo CrMS</div>
+  <button id="logoutBtn" class="logout-btn" style="display:none;">Cerrar sesión</button>
 </header>
+
+<div id="authScreen" class="auth-screen">
+  <p class="auth-intro">Iniciá sesión o creá tu cuenta para llevar tu registro y verlo desde cualquier dispositivo.</p>
+  <input type="email" id="authEmail" placeholder="Tu email" autocomplete="email">
+  <input type="password" id="authPassword" placeholder="Contraseña (mínimo 6 caracteres)" autocomplete="current-password">
+  <div class="auth-actions">
+    <button id="loginBtn" class="primary">Iniciar sesión</button>
+    <button id="signupBtn">Crear cuenta</button>
+  </div>
+  <p id="authError" class="auth-error"></p>
+  <p id="authLoading" class="auth-loading" style="display:none;">Cargando...</p>
+</div>
+
+<div id="appContent" style="display:none;">
 
 <div class="quickadd">
   <input type="date" id="jumpDate">
@@ -207,6 +258,8 @@
   <div class="legend-item"><div class="sw" style="background:var(--amarillo)"></div> Amarillo — moco tipo pico durante la fase <b>post-pico</b> (después del Día Pico)</div>
   <div class="legend-item"><div class="sw" style="background:var(--blanco); border:1.5px solid var(--blanco-border)"></div> Blanco — moco tipo pico, antes o en el Día Pico</div>
   <div class="legend-item"><img src="baby.png" style="height:24px;" alt="bebé"> — hay secreción ese día &nbsp; <span style="color:var(--mark);font-weight:800;">X</span> — Día Pico &nbsp; <span style="color:var(--mark);font-weight:800;">1·2·3</span> — los 3 días siguientes al Pico (automático)</div>
+  <div class="legend-item"><span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--ink);color:#fff;font-size:9px;font-weight:700;">I</span> — hubo relaciones/cópula ese día</div>
+  <div class="legend-item"><span style="display:inline-flex;align-items:center;justify-content:center;width:16px;height:16px;border-radius:50%;background:var(--marron);color:#fff;font-size:9px;font-weight:700;">M</span> — manchando (spotting)</div>
 
   <details style="margin-top:14px;">
     <summary style="font-size:13px; font-weight:600; color:var(--accent); cursor:pointer;">Ver sistema completo de códigos (según tu manual)</summary>
@@ -244,16 +297,23 @@
 </div>
 
 <div class="actions">
-  <button id="exportImgBtn" class="primary">Exportar imagen</button>
+  <button id="exportImgBtn" class="primary">Exportar todo (imagen)</button>
+  <button id="exportLast6Btn">Exportar últimos 6 ciclos</button>
   <button id="exportBtn">Exportar copia</button>
   <button id="importBtn">Importar copia</button>
 </div>
 <input type="file" id="fileInput" accept="application/json">
 
+</div>
+
 <div class="overlay" id="overlay">
   <div class="sheet">
     <div class="sheet-handle"></div>
-    <h3 id="sheetDate"></h3>
+    <div class="sheet-daynav">
+      <button id="prevDayBtn" type="button">‹</button>
+      <h3 id="sheetDate"></h3>
+      <button id="nextDayBtn" type="button">›</button>
+    </div>
     <div class="cycle-info" id="cycleInfo"></div>
     <div class="auto-note" id="autoNote" style="display:none;"></div>
 
@@ -272,6 +332,14 @@
       <span>Marcar como Día Pico (X)</span>
       <label class="switch"><input type="checkbox" id="peakDay"><span class="slider"></span></label>
     </div>
+    <div class="toggle-row">
+      <span>Cópula / relaciones ese día (I)</span>
+      <label class="switch"><input type="checkbox" id="intercourseToggle"><span class="slider"></span></label>
+    </div>
+    <div class="toggle-row">
+      <span>Manchando (spotting)</span>
+      <label class="switch"><input type="checkbox" id="spottingToggle"><span class="slider"></span></label>
+    </div>
 
     <div class="field-label">Código del día</div>
     <input type="text" id="codeInput" placeholder='Ej: H, M, 10KX1...'>
@@ -288,7 +356,32 @@
   </div>
 </div>
 
-<script>
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+import {
+  getAuth, createUserWithEmailAndPassword, signInWithEmailAndPassword,
+  onAuthStateChanged, signOut
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-auth.js";
+import {
+  getFirestore, doc, getDoc, setDoc, onSnapshot, enableIndexedDbPersistence
+} from "https://www.gstatic.com/firebasejs/10.12.2/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyAcGqF0dM27ojhvQHyRzh1raEC7cBGCR14",
+  authDomain: "creighton-app-d08b3.firebaseapp.com",
+  projectId: "creighton-app-d08b3",
+  storageBucket: "creighton-app-d08b3.firebasestorage.app",
+  messagingSenderId: "838612672436",
+  appId: "1:838612672436:web:e146042e46282d7af05ce1"
+};
+const fbApp = initializeApp(firebaseConfig);
+const auth = getAuth(fbApp);
+const dbFs = getFirestore(fbApp);
+try { enableIndexedDbPersistence(dbFs); } catch(e){ /* varias pestañas abiertas u navegador sin soporte: no es grave */ }
+
+let currentUser = null;
+let unsubscribeSnapshot = null;
+
 const STORAGE_KEY = 'creighton_registro_v2';
 const COLORS = [
   {id:'rojo', label:'Rojo', css:'var(--rojo)'},
@@ -297,29 +390,27 @@ const COLORS = [
   {id:'blanco', label:'Blanco', css:'var(--blanco)'},
 ];
 
-let data = loadData();
+let data = {};
 let selectedDate = null;
 const today = new Date(); today.setHours(0,0,0,0);
 const babyImg = new Image();
 babyImg.src = 'baby.png';
 
-function loadData(){
+function legacyLocalData(){
   try {
     const raw = localStorage.getItem(STORAGE_KEY);
     if (raw) return JSON.parse(raw);
     const old = localStorage.getItem('creighton_registro_v1');
     if (old) return JSON.parse(old);
-    return {};
-  } catch(e){ return {}; }
+  } catch(e){}
+  return null;
 }
+
 function saveData(){
-  try {
-    localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-    return true;
-  } catch(e){
-    alert('No se pudo guardar el registro en este navegador (' + e.message + ').\n\nEsto suele pasar si el archivo se abrió como vista previa (por ejemplo desde WhatsApp) en vez de abrirlo directo en Safari o Chrome.\n\nProbá: guardá el archivo en "Archivos"/"Descargas" del celu y abrilo desde ahí eligiendo Safari o Chrome, no la vista previa.');
-    return false;
-  }
+  if (!currentUser) return false;
+  setDoc(doc(dbFs, 'registros', currentUser.uid), { days: data })
+    .catch(err => console.error('Error guardando en la nube:', err));
+  return true;
 }
 
 function fmtDate(d){ return d.toISOString().slice(0,10); }
@@ -412,6 +503,8 @@ function renderDayCol(dateStr, dayNum){
     <div class="cnum">${dayNum}</div>
     <div class="stamp-cell ${isWhite?'blanco':''}" style="background:${entry.color ? bg : 'var(--paper-2)'}">
       ${showBaby ? '<img class="baby-img" src="baby.png" alt="secreción">' : ''}
+      ${entry.intercourse ? '<div class="intercourse-mark">I</div>' : ''}
+      ${entry.spotting ? '<div class="spotting-mark">M</div>' : ''}
       ${markHtml}
     </div>
     <div class="code-cell">${entry.code ? entry.code : ''}</div>
@@ -427,7 +520,7 @@ function findOrphanDays(starts){
   Object.keys(data).forEach(k=>{
     const entry = data[k];
     if (!entry) return;
-    const hasContent = entry.color || entry.code || (entry.note && entry.note.trim()) || entry.inicioCiclo;
+    const hasContent = entry.color || entry.code || (entry.note && entry.note.trim()) || entry.inicioCiclo || entry.baby || entry.intercourse || entry.spotting;
     if (!hasContent) return;
     const covered = starts.some((s, idx)=>{
       const range = getCycleRange(s, starts, idx);
@@ -475,7 +568,7 @@ function renderAll(){
     exportBtn.textContent = '📷 Exportar';
     exportBtn.addEventListener('click', (e)=>{
       e.stopPropagation();
-      exportImage(idx);
+      exportImage({type:'single', idx});
     });
     header.appendChild(exportBtn);
     block.appendChild(header);
@@ -582,6 +675,8 @@ function openSheet(dateStr){
   const isNewDay = !data[dateStr];
   document.getElementById('inicioCiclo').checked = entry.inicioCiclo || (isNewDay && !cyc);
   document.getElementById('peakDay').checked = !!entry.peak;
+  document.getElementById('intercourseToggle').checked = !!entry.intercourse;
+  document.getElementById('spottingToggle').checked = !!entry.spotting;
   document.getElementById('codeInput').value = entry.code || '';
   document.getElementById('notaInput').value = entry.note || '';
 
@@ -596,6 +691,15 @@ function closeSheet(){
 document.getElementById('closeBtn').addEventListener('click', closeSheet);
 document.getElementById('overlay').addEventListener('click', (e)=>{ if (e.target.id==='overlay') closeSheet(); });
 
+document.getElementById('prevDayBtn').addEventListener('click', ()=>{
+  if (!selectedDate) return;
+  openSheet(addDays(selectedDate, -1));
+});
+document.getElementById('nextDayBtn').addEventListener('click', ()=>{
+  if (!selectedDate) return;
+  openSheet(addDays(selectedDate, 1));
+});
+
 document.getElementById('saveBtn').addEventListener('click', ()=>{
   const colorEl = document.querySelector('#colorChips .chip.selected');
   const peakChecked = document.getElementById('peakDay').checked;
@@ -605,6 +709,8 @@ document.getElementById('saveBtn').addEventListener('click', ()=>{
     baby: document.getElementById('babyToggle').checked,
     inicioCiclo: document.getElementById('inicioCiclo').checked,
     peak: peakChecked,
+    intercourse: document.getElementById('intercourseToggle').checked,
+    spotting: document.getElementById('spottingToggle').checked,
     code: document.getElementById('codeInput').value.trim(),
     note: document.getElementById('notaInput').value.trim(),
   };
@@ -664,6 +770,24 @@ function drawDayCell(ctx, x, y, dateStr, dayNum, entry, pk, cellW){
     const bw = bh * (babyImg.naturalWidth / babyImg.naturalHeight);
     ctx.drawImage(babyImg, x+cellW/2-bw/2, yy+3, bw, bh);
   }
+  if (entry && entry.intercourse){
+    ctx.fillStyle = INK;
+    ctx.beginPath();
+    ctx.arc(x+10, yy+10, 7, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#FFFFFF'; ctx.font='bold 9px sans-serif';
+    ctx.fillText('I', x+10, yy+11);
+    ctx.fillStyle = INK;
+  }
+  if (entry && entry.spotting){
+    ctx.fillStyle = '#8A5A34';
+    ctx.beginPath();
+    ctx.arc(x+cellW-10, yy+10, 7, 0, Math.PI*2);
+    ctx.fill();
+    ctx.fillStyle = '#FFFFFF'; ctx.font='bold 9px sans-serif';
+    ctx.fillText('M', x+cellW-10, yy+11);
+    ctx.fillStyle = INK;
+  }
   if (pk && pk.offset===0){
     ctx.fillStyle = MARKC; ctx.font='bold 15px sans-serif'; ctx.textAlign='right';
     ctx.fillText('X', x+cellW-4, yy+stampH-6);
@@ -708,7 +832,7 @@ function drawDayCell(ctx, x, y, dateStr, dayNum, entry, pk, cellW){
   ctx.fillText(d.getDate()+' '+MESES_SHORT[d.getMonth()], x+cellW/2, yy+23);
 }
 
-function buildChartCanvas(onlyCycleIdx){
+function buildChartCanvas(selection){
   const starts = computeCycleStarts();
   const cellW = 66;
   const rowH = 18+58+20+14+30; // = 140
@@ -723,9 +847,12 @@ function buildChartCanvas(onlyCycleIdx){
     return {start, idx, range, days};
   });
 
-  const cycles = (onlyCycleIdx !== undefined && onlyCycleIdx !== null)
-    ? allCycles.filter(c => c.idx === onlyCycleIdx)
-    : allCycles;
+  let cycles = allCycles;
+  if (selection && selection.type === 'single'){
+    cycles = allCycles.filter(c => c.idx === selection.idx);
+  } else if (selection && selection.type === 'lastN'){
+    cycles = allCycles.slice(-selection.n);
+  }
 
   let maxDays = 6;
   cycles.forEach(c => { if (c.days > maxDays) maxDays = c.days; });
@@ -743,9 +870,12 @@ function buildChartCanvas(onlyCycleIdx){
 
   ctx.fillStyle = INK; ctx.textAlign='left'; ctx.textBaseline='alphabetic';
   ctx.font = 'bold 20px Georgia, serif';
-  const titleText = cycles.length === 1
-    ? 'Mi Registro · Ciclo ' + (cycles[0].idx+1)
-    : 'Mi Registro · Método Creighton';
+  let titleText = 'Mi Registro · Método Creighton';
+  if (selection && selection.type === 'single' && cycles.length){
+    titleText = 'Mi Registro · Ciclo ' + (cycles[0].idx+1);
+  } else if (selection && selection.type === 'lastN'){
+    titleText = 'Mi Registro · Últimos ' + cycles.length + ' ciclos';
+  }
   ctx.fillText(titleText, padding, 30);
   ctx.fillStyle = INKSOFT; ctx.font='12px sans-serif';
   const genDate = new Date().toLocaleDateString('es-AR', {day:'2-digit', month:'2-digit', year:'numeric'});
@@ -796,7 +926,7 @@ function buildChartCanvas(onlyCycleIdx){
     ly += 18;
   });
   ctx.fillStyle = INKSOFT; ctx.font='italic 10.5px sans-serif';
-  ctx.fillText('Figura de bebé = hay secreción · X = Día Pico · 1·2·3 = los 3 días siguientes al Pico (automático)', padding, ly+6);
+  ctx.fillText('Figura de bebé = hay secreción · X = Día Pico · 1·2·3 = post-pico (automático) · I = cópula · M = manchando', padding, ly+6);
 
   return canvas;
 }
@@ -810,13 +940,15 @@ function waitForBabyImg(){
   });
 }
 
-async function exportImage(cycleIdx){
+async function exportImage(selection){
   await waitForBabyImg();
-  const canvas = buildChartCanvas(cycleIdx);
+  const canvas = buildChartCanvas(selection);
   const url = canvas.toDataURL('image/png');
   const a = document.createElement('a');
   const stamp = new Date().toISOString().slice(0,10);
-  const suffix = (cycleIdx !== undefined && cycleIdx !== null) ? ('-ciclo' + (cycleIdx+1)) : '-completo';
+  let suffix = '-completo';
+  if (selection && selection.type === 'single') suffix = '-ciclo' + (selection.idx+1);
+  else if (selection && selection.type === 'lastN') suffix = '-ultimos' + selection.n + 'ciclos';
   a.href = url; a.download = 'registro-creighton' + suffix + '-' + stamp + '.png';
   document.body.appendChild(a); a.click(); document.body.removeChild(a);
 }
@@ -827,6 +959,14 @@ document.getElementById('exportImgBtn').addEventListener('click', async ()=>{
     return;
   }
   await exportImage(null);
+});
+
+document.getElementById('exportLast6Btn').addEventListener('click', async ()=>{
+  if (computeCycleStarts().length === 0){
+    alert('Todavía no hay ningún ciclo registrado para exportar.');
+    return;
+  }
+  await exportImage({type:'lastN', n:6});
 });
 
 document.getElementById('exportBtn').addEventListener('click', ()=>{
@@ -868,14 +1008,108 @@ if ('serviceWorker' in navigator){
   navigator.serviceWorker.register('service-worker.js').catch(function(){});
 }
 
-try {
-  renderAll();
-} catch(err){
-  document.getElementById('cyclesContainer').innerHTML =
-    '<div style="max-width:420px;margin:30px auto;padding:16px;background:#FBEAEA;border:1px solid #E3B0B0;border-radius:10px;color:#7A2E2E;font-size:13px;">'+
-    '<b>Ocurrió un error al mostrar el registro:</b><br>'+ (err && err.message ? err.message : err) +
-    '<br><br>Contale esto a quien te armó la app para que lo revise.</div>';
+function safeRenderAll(){
+  try {
+    renderAll();
+  } catch(err){
+    document.getElementById('cyclesContainer').innerHTML =
+      '<div style="max-width:420px;margin:30px auto;padding:16px;background:#FBEAEA;border:1px solid #E3B0B0;border-radius:10px;color:#7A2E2E;font-size:13px;">'+
+      '<b>Ocurrió un error al mostrar el registro:</b><br>'+ (err && err.message ? err.message : err) +
+      '<br><br>Contale esto a quien te armó la app para que lo revise.</div>';
+  }
 }
+
+function showAuthScreen(){
+  document.getElementById('authScreen').style.display = 'flex';
+  document.getElementById('appContent').style.display = 'none';
+  document.getElementById('logoutBtn').style.display = 'none';
+}
+
+function showApp(){
+  document.getElementById('authScreen').style.display = 'none';
+  document.getElementById('appContent').style.display = 'block';
+  document.getElementById('logoutBtn').style.display = 'block';
+}
+
+async function loadUserData(user){
+  const ref = doc(dbFs, 'registros', user.uid);
+  try {
+    const snap = await getDoc(ref);
+    if (!snap.exists()){
+      const legacy = legacyLocalData();
+      await setDoc(ref, { days: (legacy && Object.keys(legacy).length) ? legacy : {} });
+    }
+  } catch(e){ console.error('Error preparando el registro:', e); }
+
+  if (unsubscribeSnapshot) unsubscribeSnapshot();
+  unsubscribeSnapshot = onSnapshot(ref, (snap)=>{
+    data = (snap.exists() && snap.data().days) ? snap.data().days : {};
+    safeRenderAll();
+  }, (err)=>{ console.error('Error de sincronización:', err); });
+}
+
+onAuthStateChanged(auth, async (user)=>{
+  if (user){
+    currentUser = user;
+    document.getElementById('authError').textContent = '';
+    document.getElementById('authLoading').style.display = 'none';
+    showApp();
+    await loadUserData(user);
+  } else {
+    currentUser = null;
+    if (unsubscribeSnapshot){ unsubscribeSnapshot(); unsubscribeSnapshot = null; }
+    data = {};
+    showAuthScreen();
+  }
+});
+
+function translateAuthError(e){
+  const code = e && e.code ? e.code : '';
+  if (code.includes('email-already-in-use')) return 'Ese email ya tiene una cuenta — probá "Iniciar sesión" en vez de crear una nueva.';
+  if (code.includes('invalid-email')) return 'El email no es válido.';
+  if (code.includes('wrong-password') || code.includes('invalid-credential')) return 'Contraseña incorrecta.';
+  if (code.includes('user-not-found')) return 'No existe una cuenta con ese email — probá "Crear cuenta".';
+  if (code.includes('weak-password')) return 'La contraseña es muy débil (mínimo 6 caracteres).';
+  if (code.includes('network-request-failed')) return 'Sin conexión a internet. Revisá tu wifi/datos.';
+  return 'Ocurrió un error: ' + (e && e.message ? e.message : code);
+}
+
+document.getElementById('loginBtn').addEventListener('click', async ()=>{
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const errEl = document.getElementById('authError');
+  errEl.textContent = '';
+  if (!email || !password){ errEl.textContent = 'Completá email y contraseña.'; return; }
+  document.getElementById('authLoading').style.display = 'block';
+  try {
+    await signInWithEmailAndPassword(auth, email, password);
+  } catch(e){
+    errEl.textContent = translateAuthError(e);
+  } finally {
+    document.getElementById('authLoading').style.display = 'none';
+  }
+});
+
+document.getElementById('signupBtn').addEventListener('click', async ()=>{
+  const email = document.getElementById('authEmail').value.trim();
+  const password = document.getElementById('authPassword').value;
+  const errEl = document.getElementById('authError');
+  errEl.textContent = '';
+  if (!email || !password){ errEl.textContent = 'Completá email y contraseña.'; return; }
+  if (password.length < 6){ errEl.textContent = 'La contraseña debe tener al menos 6 caracteres.'; return; }
+  document.getElementById('authLoading').style.display = 'block';
+  try {
+    await createUserWithEmailAndPassword(auth, email, password);
+  } catch(e){
+    errEl.textContent = translateAuthError(e);
+  } finally {
+    document.getElementById('authLoading').style.display = 'none';
+  }
+});
+
+document.getElementById('logoutBtn').addEventListener('click', async ()=>{
+  await signOut(auth);
+});
 </script>
 </body>
 </html>
