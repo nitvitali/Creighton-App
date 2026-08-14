@@ -1,4 +1,4 @@
-const CACHE_NAME = 'creighton-registro-v2';
+const CACHE_NAME = 'creighton-registro-v3';
 const ASSETS = ['./', './index.html', './manifest.json', './icon-192.png', './icon-512.png', './baby.png'];
 
 self.addEventListener('install', (event) => {
@@ -32,12 +32,18 @@ self.addEventListener('fetch', (event) => {
 
   event.respondWith(
     caches.match(event.request).then((cached) => {
-      return cached || fetch(event.request).then((response) => {
-        return caches.open(CACHE_NAME).then((cache) => {
-          cache.put(event.request, response.clone());
-          return response;
-        });
-      }).catch(() => cached);
+      return fetch(event.request).then((response) => {
+        // Solo guardamos en caché respuestas exitosas (200-299).
+        // Si guardamos un error (404, etc.) por accidente, queda "pegado" para siempre.
+        if (response && response.ok){
+          const clone = response.clone();
+          caches.open(CACHE_NAME).then((cache) => cache.put(event.request, clone));
+        }
+        return response;
+      }).catch(() => {
+        // Sin conexión: usamos lo cacheado si existe.
+        return cached || Promise.reject('offline y sin caché para ' + event.request.url);
+      });
     })
   );
 });
