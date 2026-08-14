@@ -110,6 +110,7 @@
     font-size: 11px; color: var(--accent); cursor:pointer; white-space:nowrap; font-family: inherit;
     flex-shrink:0;
   }
+  .cycle-header-btns{ display:flex; gap:6px; flex-shrink:0; }
   .cycle-strip{
     display:flex; overflow-x:auto; gap:4px; padding: 0 12px 10px;
     scroll-snap-type: x proximity;
@@ -461,6 +462,8 @@ const COLORS = [
 let data = {};
 let cycleOverrides = {};
 let editingCycleStart = null;
+let expandedCycles = new Set();
+const RECENT_CYCLES_ALWAYS_OPEN = 3;
 let selectedDate = null;
 const today = new Date(); today.setHours(0,0,0,0);
 const babyImg = new Image();
@@ -674,12 +677,35 @@ function renderAll(){
 
   starts.forEach((start, idx)=>{
     const range = getCycleRange(start, starts, idx);
+    const isRecent = idx >= starts.length - RECENT_CYCLES_ALWAYS_OPEN;
+    const isExpanded = isRecent || expandedCycles.has(idx);
+
     const block = document.createElement('div');
     block.className = 'cycle-block';
     const header = document.createElement('div');
     header.className = 'cycle-header';
     const startLabel = dateObj(start).toLocaleDateString('es-AR', {day:'2-digit', month:'2-digit', year:'numeric'});
-    header.innerHTML = `<span class="cycle-header-label"><span class="n">${idx+1}</span> Ciclo ${idx+1} · ${startLabel}</span>`;
+    const totalDays = Math.round((dateObj(range.end) - dateObj(range.start))/86400000) + 1;
+    const labelSpan = document.createElement('span');
+    labelSpan.className = 'cycle-header-label';
+    labelSpan.innerHTML = `<span class="n">${idx+1}</span> Ciclo ${idx+1} · ${startLabel}` + (!isExpanded ? ` · ${totalDays} días` : '');
+    header.appendChild(labelSpan);
+
+    const headerBtns = document.createElement('div');
+    headerBtns.className = 'cycle-header-btns';
+
+    if (!isRecent){
+      const toggleBtn = document.createElement('button');
+      toggleBtn.className = 'cycle-export-btn';
+      toggleBtn.textContent = isExpanded ? '▲ Cerrar' : '▼ Ver ciclo';
+      toggleBtn.addEventListener('click', (e)=>{
+        e.stopPropagation();
+        if (isExpanded) expandedCycles.delete(idx); else expandedCycles.add(idx);
+        renderAll();
+      });
+      headerBtns.appendChild(toggleBtn);
+    }
+
     const exportBtn = document.createElement('button');
     exportBtn.className = 'cycle-export-btn';
     exportBtn.textContent = '📷 Exportar';
@@ -687,8 +713,14 @@ function renderAll(){
       e.stopPropagation();
       exportImage({type:'single', idx});
     });
-    header.appendChild(exportBtn);
+    headerBtns.appendChild(exportBtn);
+    header.appendChild(headerBtns);
     block.appendChild(header);
+
+    if (!isExpanded){
+      container.appendChild(block);
+      return;
+    }
 
     const strip = document.createElement('div');
     strip.className = 'cycle-strip';
