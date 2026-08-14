@@ -987,7 +987,7 @@ function drawDayCell(ctx, x, y, dateStr, dayNum, entry, pk, cellW){
   ctx.fillStyle = '#FFFFFF';
   ctx.fillRect(x, yy, cellW, 20);
   ctx.strokeStyle = LINE; ctx.strokeRect(x, yy, cellW, 20);
-  ctx.fillStyle = INK; ctx.font='10px sans-serif';
+  ctx.fillStyle = INK; ctx.font='11px sans-serif';
   const codeText = (entry && entry.code) ? entry.code : '';
   ctx.fillText(codeText, x+cellW/2, yy+11);
   yy += 20;
@@ -1011,7 +1011,7 @@ function drawDayCell(ctx, x, y, dateStr, dayNum, entry, pk, cellW){
   ctx.fillStyle = SAGE2;
   ctx.fillRect(x, yy, cellW, dateH);
   ctx.strokeStyle = LINE; ctx.strokeRect(x, yy, cellW, dateH);
-  ctx.fillStyle = INKSOFT; ctx.font='9px sans-serif';
+  ctx.fillStyle = INKSOFT; ctx.font='10px sans-serif';
   ctx.fillText(WD[d.getDay()], x+cellW/2, yy+11);
   ctx.fillText(d.getDate()+' '+MESES_SHORT[d.getMonth()], x+cellW/2, yy+23);
 }
@@ -1026,7 +1026,7 @@ function drawPostPeakSummary(ctx, x, y, _unused, cellW, rowH, numText, labelText
   ctx.lineWidth = 1;
   ctx.fillStyle = '#A9633B'; ctx.font = 'bold 20px Georgia, serif'; ctx.textAlign='center';
   ctx.fillText(numText, x+cellW/2, y+rowH/2 - 4);
-  ctx.fillStyle = INKSOFT; ctx.font = '8.5px sans-serif';
+  ctx.fillStyle = INKSOFT; ctx.font = '9.5px sans-serif';
   const words = labelText.split(' ');
   const line1 = words.slice(0, Math.ceil(words.length/2)).join(' ');
   const line2 = words.slice(Math.ceil(words.length/2)).join(' ');
@@ -1066,7 +1066,7 @@ function buildChartCanvas(selection){
   const titleH = 60;
   const height = titleH + cycles.reduce((sum)=> sum + headerH + rowH + gapBetween, 0) + legendH + padding;
 
-  const EXPORT_SCALE = 2; // duplica la resolución real del PNG para que no se vea borroso al hacer zoom
+  const EXPORT_SCALE = 3; // triplica la resolución real del PNG para que no se vea borroso al hacer zoom
   const canvas = document.createElement('canvas');
   canvas.width = width * EXPORT_SCALE; canvas.height = height * EXPORT_SCALE;
   const ctx = canvas.getContext('2d');
